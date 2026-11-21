@@ -4,7 +4,7 @@ A lightweight, read-only Windows desktop application for Lenovo LOQ laptops. Bui
 
 ## Features
 
-- **Real-time fan monitoring:** Reads Fan 1 and Fan 2 RPM using Lenovo WMI feature IDs:
+- **Real-time fan monitoring:** Reads Fan 1 and Fan 2 RPM using Lenovo WMI feature IDs validated on the developer's Lenovo LOQ:
   - `0x04030001`
   - `0x04030002`
 - **CPU and GPU temperatures:** Attempts to retrieve temperatures through Lenovo's `LENOVO_GAMEZONE_DATA` getter methods.
@@ -23,7 +23,7 @@ It calls only the following WMI methods:
 
 It does **not** call WMI setters, fan-table methods, BIOS interfaces, or fan-control APIs.
 
-Temperature getter methods are model- and firmware-dependent and have not yet been confirmed on every Lenovo LOQ configuration. If the WMI provider does not return a valid temperature, the application displays `-- °C`.
+Temperature getter methods are model- and firmware-dependent and have not yet been confirmed across all Lenovo LOQ configurations. If the WMI provider does not return a valid temperature, the application displays `-- °C`.
 
 Fan RPM monitoring does not depend on temperature support.
 
