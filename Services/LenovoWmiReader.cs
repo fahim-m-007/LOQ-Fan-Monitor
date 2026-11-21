@@ -1,7 +1,5 @@
-
 using System;
-using System.IO;
-using System.Linq;
+using System.Diagnostics;
 using System.Management;
 
 namespace LOQFanMonitor.Services;
@@ -17,11 +15,6 @@ public sealed class LenovoWmiReader
 
     private const uint Fan1FeatureId = 0x04030001;
     private const uint Fan2FeatureId = 0x04030002;
-
-    private static readonly string LogPath = Path.Combine(
-        Path.GetTempPath(),
-        "LOQFanMonitor-wmi.log"
-    );
 
     public TelemetrySnapshot Read()
     {
@@ -55,14 +48,11 @@ public sealed class LenovoWmiReader
             {
                 using (instance)
                 {
-                    Log($"Reading fan feature ID: 0x{featureId:X8}");
-
                     using ManagementBaseObject? input =
                         instance.GetMethodParameters("GetFeatureValue");
 
                     if (input is null)
                     {
-                        Log("GetMethodParameters returned null.");
                         continue;
                     }
 
@@ -77,36 +67,21 @@ public sealed class LenovoWmiReader
 
                     if (output is null)
                     {
-                        Log("InvokeMethod returned null.");
                         continue;
-                    }
-
-                    foreach (PropertyData property in output.Properties)
-                    {
-                        Log(
-                            $"Output: {property.Name} = " +
-                            $"{property.Value ?? "<null>"}"
-                        );
                     }
 
                     object? rawValue = output["value"];
 
                     if (rawValue is not null)
                     {
-                        uint rpm = Convert.ToUInt32(rawValue);
-
-                        Log($"Fan feature 0x{featureId:X8}: {rpm} RPM");
-
-                        return rpm;
+                        return Convert.ToUInt32(rawValue);
                     }
-
-                    Log("The output did not contain a value parameter.");
                 }
             }
         }
         catch (Exception ex)
         {
-            Log($"Fan reading exception: {ex}");
+            Debug.WriteLine($"Fan reading exception (0x{featureId:X8}): {ex.Message}");
         }
 
         return null;
@@ -136,16 +111,7 @@ public sealed class LenovoWmiReader
 
                     if (output is null)
                     {
-                        Log($"{methodName}: null output.");
                         continue;
-                    }
-
-                    foreach (PropertyData property in output.Properties)
-                    {
-                        Log(
-                            $"{methodName} output: {property.Name} = " +
-                            $"{property.Value ?? "<null>"}"
-                        );
                     }
 
                     object? raw = output["Data"];
@@ -156,36 +122,18 @@ public sealed class LenovoWmiReader
 
                         if (temperature >= 1 && temperature <= 125)
                         {
-                            Log($"{methodName}: {temperature} C");
                             return temperature;
                         }
-
-                        Log($"{methodName}: invalid temperature {temperature}");
                     }
                 }
             }
         }
         catch (Exception ex)
         {
-            Log($"{methodName} exception: {ex}");
+            Debug.WriteLine($"{methodName} exception: {ex.Message}");
         }
 
         return null;
-    }
-
-    private static void Log(string message)
-    {
-        try
-        {
-            File.AppendAllText(
-                LogPath,
-                $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}{Environment.NewLine}"
-            );
-        }
-        catch
-        {
-            // Logging failure must never crash the monitor.
-        }
     }
 }
 
