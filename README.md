@@ -1,26 +1,31 @@
 # LOQ Fan Monitor
 
-A read-only Windows desktop monitor for Lenovo LOQ laptops.
+A lightweight, read-only Windows desktop application for Lenovo LOQ laptops. Built with C# and WPF on .NET 10, it displays real-time fan speeds, CPU/GPU temperatures (when supported), and fan speed history through a modern desktop interface.
 
-## What it does
+## Features
 
-- Reads Fan 1 and Fan 2 RPM using the Lenovo WMI feature IDs already tested in PowerShell:
+- **Real-time fan monitoring:** Reads Fan 1 and Fan 2 RPM using Lenovo WMI feature IDs:
   - `0x04030001`
   - `0x04030002`
-- Attempts CPU and GPU temperature reads through Lenovo `LENOVO_GAMEZONE_DATA` getter methods.
-- Shows a rolling 180-second fan RPM graph.
-- Minimizes to the Windows system tray.
+- **CPU and GPU temperatures:** Attempts to retrieve temperatures through Lenovo's `LENOVO_GAMEZONE_DATA` getter methods.
+- **Fan speed history:** Displays a rolling 180-second RPM graph.
+- **System tray support:** Allows the application to minimize to the Windows system tray.
 
-## Important safety boundary
+## Safety and Read-Only Design
 
-This project is deliberately read-only. It calls only:
+This application is deliberately designed to be read-only.
+
+It calls only the following WMI methods:
+
 - `LENOVO_OTHER_METHOD.GetFeatureValue`
 - `LENOVO_GAMEZONE_DATA.GetCPUTemp`
 - `LENOVO_GAMEZONE_DATA.GetGPUTemp`
 
-It does not call WMI setters, fan-table methods, BIOS interfaces, or fan-control APIs.
+It does **not** call WMI setters, fan-table methods, BIOS interfaces, or fan-control APIs.
 
-Temperature methods are model/firmware dependent and have not yet been confirmed on this particular LOQ. If the WMI provider does not return a valid temperature, the UI displays `-- °C`. Fan RPM reading does not depend on temperature support.
+Temperature getter methods are model- and firmware-dependent and have not yet been confirmed on every Lenovo LOQ configuration. If the WMI provider does not return a valid temperature, the application displays `-- °C`.
+
+Fan RPM monitoring does not depend on temperature support.
 
 ## Requirements
 
@@ -28,11 +33,11 @@ Temperature methods are model/firmware dependent and have not yet been confirmed
 - .NET 10 SDK
 - Lenovo WMI provider available on the laptop
 
-## Run from source
+## Run from Source
 
 1. Install the .NET 10 SDK from Microsoft's official .NET download page.
-2. Extract this folder.
-3. Open PowerShell in this folder.
+2. Clone or download this repository.
+3. Open PowerShell in the project folder.
 4. Run:
 
    ```powershell
@@ -40,25 +45,44 @@ Temperature methods are model/firmware dependent and have not yet been confirmed
    dotnet run
    ```
 
-If WMI access is denied, close the app and try running PowerShell/Terminal as Administrator, then run it again. The app manifest does not force Administrator privileges.
+If WMI access is denied, close the application and try running PowerShell or Windows Terminal as Administrator. The application manifest does not force Administrator privileges.
 
-## Publish a standalone folder
+## Build
+
+To build the application in Release configuration:
+
+```powershell
+dotnet build -c Release
+```
+
+## Publish a Standalone Version
+
+To publish a self-contained Windows x64 version:
 
 ```powershell
 dotnet publish -c Release -r win-x64 --self-contained true
 ```
 
-The published output will be under `bin\Release\net10.0-windows\win-x64\publish`.
+The published application will be available under:
 
-## First test checklist
+```text
+bin\Release\net10.0-windows\win-x64\publish
+```
 
-- Confirm both fan RPM values match the PowerShell monitor.
-- Switch between Quiet, Balanced, Performance, and Custom modes in Lenovo Vantage and check that the app follows the changes.
-- Check whether CPU/GPU temperature values appear. If they remain unavailable, we should inspect the exact WMI method signatures and outputs before adding another sensor source.
-- Minimize to tray, reopen from the tray icon, then exit using the tray menu.
+## Testing Checklist
 
-## Current limitations
+- Confirm that both fan RPM readings match the PowerShell monitor.
+- Switch between Quiet, Balanced, Performance, and Custom modes in Lenovo Vantage and check whether the application reflects the changes.
+- Check whether CPU and GPU temperature readings are available.
+- If temperature readings remain unavailable, inspect the exact WMI method signatures and outputs before adding another sensor source.
+- Test minimizing to the system tray, reopening the application from the tray icon, and exiting through the tray menu.
 
-- The temperature getter calls are best-effort and need validation on the target laptop.
-- The graph uses a fixed broad RPM scale for now.
-- The tray icon is a generic Windows information icon; a custom LOQ icon can be added later.
+## Current Limitations
+
+- Temperature getter methods are best-effort and still need validation across different Lenovo LOQ models and firmware versions.
+- The graph currently uses a fixed, broad RPM scale.
+- The tray icon currently uses a generic Windows information icon. A custom LOQ icon may be added in a future update.
+
+## Disclaimer
+
+This project is an independent monitoring utility and is not an official Lenovo application. It does not control fan speeds or modify laptop firmware settings.
